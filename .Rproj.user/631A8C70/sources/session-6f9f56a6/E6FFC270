@@ -1,11 +1,11 @@
 {
     "id": "E6FFC270",
-    "path": null,
-    "project_path": null,
+    "path": "C:/Users/dell/OneDrive/Desktop/ST5014CEM/R code folder/school cleaning.R",
+    "project_path": "school cleaning.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "4004872179",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1721292966521.0,
     "source_on_save": false,
     "relative_order": 1,
@@ -17,11 +17,11 @@
         "scrollLine": "12"
     },
     "folds": "",
-    "lastKnownWriteTime": 7307491043415436322,
-    "encoding": "",
+    "lastKnownWriteTime": 1721297632,
+    "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1721295017137,
+    "last_content_update": 1721297632150,
     "read_only": false,
     "read_only_alternatives": []
 }
