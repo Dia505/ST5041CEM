@@ -1,8 +1,6 @@
 library(tidyverse)
-library(tidyr)
 library(readr)
 library(dplyr)
-library(lubridate)
 
 #FOR CRIME DATA SET OF BRISTOL IN 2021
 #First, the data sets for 2021 are loaded and analyzed via dimensions and number of missing values for each column
@@ -696,11 +694,72 @@ summary(cwCrimeRate2023)
 bristolCrimeRateCleaned = bind_rows(bsCrimeRate2021, bsCrimeRate2022, bsCrimeRate2023)
 View(bristolCrimeRateCleaned)
 dim(bristolCrimeRateCleaned)
+sum(duplicated(bristolCrimeRateCleaned))
 
 cornwallCrimeRateCleaned = bind_rows(cwCrimeRate2021, cwCrimeRate2022, cwCrimeRate2023)
 View(cornwallCrimeRateCleaned)
 dim(cornwallCrimeRateCleaned)
 
+#For adding town/city to the data set
+pscdToLsoa = read_csv("C:/Users/dell/OneDrive/Desktop/ST5014CEM/Datasets/population/Postcode to LSOA.csv")
+View(pscdToLsoa)
+dim(pscdToLsoa)
+colnames(pscdToLsoa)
+
+#The data set is narrowed down to necessary columns
+pscdToLsoa = pscdToLsoa %>% 
+  rename(postcode_space = pcds) %>% 
+  rename(`LSOA code` = lsoa11cd) %>% 
+  rename(city = ladnm) %>% 
+  select(postcode_space, `LSOA code`, city)
+View(pscdToLsoa)
+dim(pscdToLsoa)
+
+#The same LSOA code has many rows with different postcode_space and city values
+#To make data set more manageable and comprehensible, the duplicated associations are removed 
+  #and only the first postcode_space and city occurrence is recorded
+#So, an LSOA code is only associated to a single postcode and city
+pscdToLsoa = pscdToLsoa %>% 
+  group_by(`LSOA code`) %>% 
+  summarize(
+    postcode_space = first(postcode_space), 
+    city = first(city))
+dim(pscdToLsoa)
+View(pscdToLsoa)
+
+#Inner join done for bristolCrimeRateCleaned and pscdToLsoa, only retaining common rows
+#bristolCrimeRateCleaned is narrowed down to required columns 
+bristolCrimeRateCleaned = bristolCrimeRateCleaned %>% 
+  rename(Year = Month) %>% 
+  select(`Crime ID`, Year, `LSOA code`, `LSOA name`, `Crime type`) %>% 
+  inner_join(pscdToLsoa, by = "LSOA code")
+View(bristolCrimeRateCleaned)
+dim(bristolCrimeRateCleaned)
+
+#Data set bristolCrimeSummary records the number of different crimes 
+  #that occurred in cities of Bristol, from 2021-2023
+bristolCrimeSummary = bristolCrimeRateCleaned %>% 
+  group_by(city, Year, `Crime type`) %>% 
+  summarize(CrimeTypeCount = n(), .groups = 'drop') %>% 
+  arrange(Year)
+View(bristolCrimeSummary)
+
+#cornwallCrimeRateCleaned inner joined with pscdToLsoa
+cornwallCrimeRateCleaned = cornwallCrimeRateCleaned %>% 
+  rename(Year = Month) %>% 
+  select(`Crime ID`, Year, `LSOA code`, `LSOA name`, `Crime type`) %>% 
+  inner_join(pscdToLsoa, by = "LSOA code")
+View(cornwallCrimeRateCleaned)
+dim(cornwallCrimeRateCleaned)
+
+#Number of different crimes that occurred in cities of Cornwall from 2021-2023
+cornwallCrimeSummary = cornwallCrimeRateCleaned %>% 
+  group_by(city, Year, `Crime type`) %>% 
+  summarize(CrimeTypeCount = n(), .groups = 'drop') %>% 
+  arrange(Year)
+View(cornwallCrimeSummary)
+
 write.csv(bristolCrimeRateCleaned, "C:/Users/dell/OneDrive/Desktop/ST5014CEM/Clean data/crime rate/bristol-crime-rate.csv", row.names = FALSE)
 write.csv(cornwallCrimeRateCleaned, "C:/Users/dell/OneDrive/Desktop/ST5014CEM/Clean data/crime rate/cornwall-crime-rate.csv", row.names = FALSE)
-
+write.csv(bristolCrimeSummary, "C:/Users/dell/OneDrive/Desktop/ST5014CEM/Clean data/crime rate/bristol-crime-summary.csv", row.names = FALSE)
+write.csv(cornwallCrimeSummary, "C:/Users/dell/OneDrive/Desktop/ST5014CEM/Clean data/crime rate/cornwall-crime-summary.csv", row.names = FALSE)

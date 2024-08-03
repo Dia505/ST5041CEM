@@ -1,8 +1,6 @@
 library(tidyverse)
-library(tidyr)
 library(readr)
 library(dplyr)
-library(lubridate)
 
 #FOR BROADBAND SPEED PERFORMANCE
 broadbandSpeedPerformance = read_csv("C:/Users/dell/OneDrive/Desktop/ST5014CEM/Datasets/broadband speed/201805_fixed_pc_performance_r03.csv")
@@ -182,11 +180,28 @@ View(bristolBroadbandSpeedCleaned)
 colSums(is.na(bristolBroadbandSpeedCleaned))
 dim(bristolBroadbandSpeedCleaned)
 
+#The data set is cleaned further to remove unnecessary columns 
+bristolBroadbandSpeedCleaned = bristolBroadbandSpeedCleaned %>% 
+  select(postcode, postcode_space, `postcode area`, 
+         `Average download speed (Mbit/s)`, `Maximum download speed (Mbit/s)`, `Minimum download speed (Mbit/s)`,
+         `Average upload speed (Mbit/s)`, `Maximum upload speed (Mbit/s)`, `Minimum upload speed (Mbit/s)`,
+         `Average data usage (GB)`, `All Premises`, `Connected Premises`)
+View(bristolBroadbandSpeedCleaned)
+dim(bristolBroadbandSpeedCleaned)
+
 #For Cornwall
 cornwallBroadbandSpeedCleaned = inner_join(cwBroadbandSpeedPerf, cwBroadbandSpeedCov,
                                           by = c("postcode", "postcode_space", "postcode area"))
 View(cornwallBroadbandSpeedCleaned)
 colSums(is.na(cornwallBroadbandSpeedCleaned))
+dim(cornwallBroadbandSpeedCleaned)
+
+cornwallBroadbandSpeedCleaned = cornwallBroadbandSpeedCleaned %>% 
+  select(postcode, postcode_space, `postcode area`, 
+         `Average download speed (Mbit/s)`, `Maximum download speed (Mbit/s)`, `Minimum download speed (Mbit/s)`,
+         `Average upload speed (Mbit/s)`, `Maximum upload speed (Mbit/s)`, `Minimum upload speed (Mbit/s)`,
+         `Average data usage (GB)`, `All Premises`, `Connected Premises`)
+View(cornwallBroadbandSpeedCleaned)
 dim(cornwallBroadbandSpeedCleaned)
 
 #For Bristol and Cornwall
@@ -195,6 +210,50 @@ bcBroadbandSpeedCleaned = inner_join(bcBroadbandSpeedPerf, bcBroadbandSpeedCov,
 View(bcBroadbandSpeedCleaned)
 colSums(is.na(bcBroadbandSpeedCleaned))
 dim(bcBroadbandSpeedCleaned)
+
+bcBroadbandSpeedCleaned = bcBroadbandSpeedCleaned %>% 
+  select(postcode, postcode_space, `postcode area`, 
+         `Average download speed (Mbit/s)`, `Maximum download speed (Mbit/s)`, `Minimum download speed (Mbit/s)`,
+         `Average upload speed (Mbit/s)`, `Maximum upload speed (Mbit/s)`, `Minimum upload speed (Mbit/s)`,
+         `Average data usage (GB)`, `All Premises`, `Connected Premises`)
+View(bcBroadbandSpeedCleaned)
+dim(bcBroadbandSpeedCleaned)
+
+#For postcode to LSOA code
+pscdToLsoa = read_csv("C:/Users/dell/OneDrive/Desktop/ST5014CEM/Datasets/population/Postcode to LSOA.csv")
+View(pscdToLsoa)
+dim(pscdToLsoa)
+colnames(pscdToLsoa)
+
+#To check if lsoa11nm has values of towns or certain neighbourhoods
+print(unique(pscdToLsoa$lsoa11nm))
+
+#pcds renamed to postcode_space for left_join
+#lsoa11nm renamed to lsoa_area, it's values don't correspond to towns
+#ladnm renamed to cities
+#The data frame is narrowed down to relevant columns
+pscdToLsoa = pscdToLsoa %>% 
+  rename(postcode_space = pcds) %>% 
+  rename(lsoa_area = lsoa11nm) %>% 
+  rename(city = ladnm) %>% 
+  select(postcode_space, lsoa_area, city)
+View(pscdToLsoa)
+colSums(is.na(pscdToLsoa))
+
+#Using left_join, names of lsoa areas and cities are added to all cleaned data sets of Bristol, Cornwall and both
+bristolBroadbandSpeedCleaned = bristolBroadbandSpeedCleaned %>% 
+  left_join(pscdToLsoa, by = "postcode_space")
+View(bristolBroadbandSpeedCleaned)
+colnames(bristolBroadbandSpeedCleaned)
+dim(bristolBroadbandSpeedCleaned)
+
+cornwallBroadbandSpeedCleaned = cornwallBroadbandSpeedCleaned %>% 
+  left_join(pscdToLsoa, by = "postcode_space")
+View(cornwallBroadbandSpeedCleaned)
+
+bcBroadbandSpeedCleaned = bcBroadbandSpeedCleaned %>% 
+  left_join(pscdToLsoa, by = "postcode_space")
+View(bcBroadbandSpeedCleaned)
 
 #Cleaned data sets saved in csv format
 write.csv(bristolBroadbandSpeedCleaned, "C:/Users/dell/OneDrive/Desktop/ST5014CEM/Clean data/broadband speed/bristol-broadband-speed.csv", row.names = FALSE)
