@@ -130,7 +130,7 @@ max_values = rep(max(radar_data[-1], na.rm = TRUE), ncol(radar_data))
 radar_data = rbind(rep(0, ncol(radar_data)), max_values, radar_data)
 
 #Set up the radar chart
-colnames(radar_data) = c("Min", "Max", "Bristol", "Cornwall") 
+colnames(radar_data) = c("Max",'Min',"Bristol", "Cornwall") 
 
 #Plot radar chart
 radarchart(radar_data, 
