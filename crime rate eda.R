@@ -98,42 +98,49 @@ ggplotly(drugOffenceRateBoxPlot)
 
 
 #------------------------------------------------------------------------------------
-#RADAR CHART OF VEHICLE CRIME RATE PER 10,000 PEOPLE OF 2022 IN BRISTOL AND CORNWALL
+#RADAR CHART OF VEHICLE CRIME RATE PER 10,000 PEOPLE OF 2022 IN BRISTOL 
 #vehicleCrimeRate data set created by filtering out Vehicle crime
-vehicleCrimeRate = bcCrimeRate %>% 
+bsVehicleCrimeRate = bristolCrimeRate %>% 
   filter(year(Year) == 2022 & month(Year) == 11) %>% 
   left_join(population_2022, by = "Postcode") %>% 
   filter(`Crime type` == "Vehicle crime") %>% 
-  filter(city == "Bristol, City of" | city == "Cornwall") %>% 
+  filter(city == "Bristol, City of") %>% 
   filter(!is.na(Population))
-View(vehicleCrimeRate)
-dim(vehicleCrimeRate)
-colSums(is.na(vehicleCrimeRate))
+View(bsVehicleCrimeRate)
+dim(bsVehicleCrimeRate)
+colSums(is.na(bsVehicleCrimeRate))
 
 #Data frame vehicleCrimeRateSummary created containing vehicle crime rate per 10,000 for each LSOA 
-vehicleCrimeRateSummary = vehicleCrimeRate %>%
-  group_by(city, `LSOA name`) %>%
+bsVehicleCrimeRateSummary = bsVehicleCrimeRate %>%
+  group_by(`LSOA name`) %>%
   summarise(total_vehicleCrimes = n(), 
     population = first(Population),
     vehicleCrimeRate_per_10000 = (total_vehicleCrimes / population) * 10000) %>%
   ungroup()
-vehicleCrimeRateSummary
+View(bsVehicleCrimeRateSummary)
+
+# Sample 20 LSOAs randomly
+set.seed(123) # Set seed for reproducibility
+bsSampled_lsoas = bsVehicleCrimeRateSummary %>%
+  sample_n(20)
 
 #Created dataframe for radar chart
-radar_data = vehicleCrimeRateSummary %>%
+bsRadar_data = bsSampled_lsoas %>%
   pivot_wider(names_from = `LSOA name`, values_from = vehicleCrimeRate_per_10000, values_fill = list(vehicleCrimeRate_per_10000 = 0)) %>%
-  select(-city) %>%
   as.data.frame()
 
 #Max values added for scaling and dummy variables
-max_values = rep(max(radar_data[-1], na.rm = TRUE), ncol(radar_data))
-radar_data = rbind(rep(0, ncol(radar_data)), max_values, radar_data)
+bsMax_values = rep(max(bsRadar_data[-1], na.rm = TRUE), ncol(bsRadar_data))
+bsRadar_data = rbind(rep(0, ncol(bsRadar_data)), bsMax_values, bsRadar_data)
+dim(bsRadar_data)
 
 #Set up the radar chart
-colnames(radar_data) = c("Max",'Min',"Bristol", "Cornwall") 
+#Min and Max columns: to define the scale of the chart
+  #i.e., maximum and minimum value for each axis
+colnames(bsRadar_data) = c("Min", "Max", paste("Area", 1:(ncol(bsRadar_data) - 2), sep = " "))
 
 #Plot radar chart
-radarchart(radar_data, 
+radarchart(bsRadar_data, 
            axistype = 1, 
            pcol = c("blue", "red"), 
            pfcol = c("blue", "red"), 
@@ -142,7 +149,7 @@ radarchart(radar_data,
            cglty = 1, 
            axislabcol = "grey", 
            vlcex = 0.8, 
-           title = "Vehicle Crime Rate per 10,000 People in Bristol and Cornwall (Nov 2022)",
+           title = "Vehicle Crime Rate per 10,000 People in Bristol (Nov 2022)",
            cex.main = 1)
 
 
